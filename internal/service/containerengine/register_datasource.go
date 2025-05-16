@@ -10,6 +10,7 @@ func RegisterDatasource() {
 	tfresource.RegisterDatasource("oci_containerengine_addon_options", ContainerengineAddonOptionsDataSource())
 	tfresource.RegisterDatasource("oci_containerengine_addons", ContainerengineAddonsDataSource())
 	tfresource.RegisterDatasource("oci_containerengine_cluster", ContainerengineClusterDataSource())
+	tfresource.RegisterDatasource("oci_containerengine_cluster_auth", ContainerengineClusterAuthDataSource())
 	tfresource.RegisterDatasource("oci_containerengine_cluster_credential_rotation_status", ContainerengineClusterCredentialRotationStatusDataSource())
 	tfresource.RegisterDatasource("oci_containerengine_cluster_kube_config", ContainerengineClusterKubeConfigDataSource())
 	tfresource.RegisterDatasource("oci_containerengine_cluster_option", ContainerengineClusterOptionDataSource())
