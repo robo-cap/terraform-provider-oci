@@ -799,8 +799,8 @@ func (s *ContainerengineClusterResourceCrud) Create() error {
 	if err != nil {
 		return err
 	}
+	
 	s.Res = &responseGet.Cluster
-
 	return nil
 }
 
@@ -957,15 +957,33 @@ func getErrorFromContainerengineClusterWorkRequest(client *oci_containerengine.C
 
 func (s *ContainerengineClusterResourceCrud) Get() error {
 	request := oci_containerengine.GetClusterRequest{}
-
+	
 	tmp := s.D.Id()
 	request.ClusterId = &tmp
 
-	if shouldIncludeOidcConfigFile, ok := s.D.GetOkExists("should_include_oidc_config_file"); ok {
-		tmp := shouldIncludeOidcConfigFile.(bool)
-		request.ShouldIncludeOidcConfigFile = &tmp
+	oidcConfigEnabledPath := "options.0.open_id_connect_token_authentication_config.0.is_open_id_connect_auth_enabled"
+	if oidcConfigEnabledVal, ok := s.D.GetOkExists(oidcConfigEnabledPath); ok {
+		// Value exists, now type assert it to bool
+		if oidcConfigEnabledBool, isBool := oidcConfigEnabledVal.(bool); isBool {
+			// We set the flag to true only if the OIDC authentication is enabled in the config.
+			if oidcConfigEnabledBool {
+				shouldInclude := true
+				request.ShouldIncludeOidcConfigFile = &shouldInclude
+				log.Printf("[DEBUG] Setting ShouldIncludeOidcConfigFile to true based on state.")
+			} else {
+                // If OIDC authentication is explicitly disabled in the state, we don't include the flag in the get call.
+                log.Printf("[DEBUG] OIDC authentication is disabled in state. Not setting ShouldIncludeOidcConfigFile.")
+            }
+		} else {
+			// Should not happen with correct schema definition, but log a warning.
+			log.Printf("[WARN] Expected boolean for %s, but got %T. Not setting ShouldIncludeOidcConfigFile.", oidcConfigEnabledPath, oidcConfigEnabledVal)
+		}
+	} else {
+		// Value does not exist in state (e.g., options block or oidc config block not present)
+		// Do not set request.ShouldIncludeOidcConfigFile, let the API default apply (effectively false)
+		log.Printf("[DEBUG] OIDC authentication config not found in state. Not setting ShouldIncludeOidcConfigFile.")
 	}
-
+	
 	request.RequestMetadata.RetryPolicy = tfresource.GetRetryPolicy(s.DisableNotFoundRetries, "containerengine")
 
 	response, err := s.Client.GetCluster(context.Background(), request)
